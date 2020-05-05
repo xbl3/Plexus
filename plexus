@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-HEADER_TEXT="\\e[93m=== Plexus v0.9.74 - https://github.com/Wolveix/Plexus ===\\e[0m\\n"
+HEADER_TEXT="\\e[93m=== Plexus v0.9.75 - https://github.com/Wolveix/Plexus ===\\e[0m\\n"
 set -e
 if [ -f "${HOME}/.config/plexus/plexus.conf" ]; then
     source "${HOME}/.config/plexus/plexus.conf"
@@ -530,10 +530,6 @@ function func_encode {
 
     declare -a arguments=("-y" "-nostdin" "-stats" "-preset" "$ffmpeg_preset" "-max_muxing_queue_size" "1024" "-movflags" "faststart" "-threads" "$ffmpeg_threads" "-map" "0")
 
-    if [ "$deinterlacing" != "false" ]; then
-        arguments=( "${arguments[@]}" "-vf" "yadif" )
-    fi
-
     if [ "$hardware_acceleration" == "true" ]; then
         arguments=( "${arguments[@]}" "-hwaccel" "$hardware_codec" )
     fi
@@ -687,6 +683,10 @@ function func_encode {
                     codecs="$codecs -c:v copy"
                 else
                     codecs="$codecs -c:v $video_library"
+
+                    if [ "$deinterlacing" != "false" ]; then
+                        arguments=( "${arguments[@]}" "-vf" "yadif" )
+                    fi
                 fi
 
                 encode_success=0
