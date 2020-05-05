@@ -1,17 +1,20 @@
 #!/usr/bin/env bash
-HEADER_TEXT="\\e[93m=== Plexus v0.9.73 - https://github.com/Wolveix/Plexus ===\\e[0m\\n"
+HEADER_TEXT="\\e[93m=== Plexus v0.9.74 - https://github.com/Wolveix/Plexus ===\\e[0m\\n"
 set -e
-if [ -f "$HOME"/.config/plexus/plexus.conf ]; then
-    source "$HOME"/.config/plexus/plexus.conf
+if [ -f "${HOME}/.config/plexus/plexus.conf" ]; then
+    source "${HOME}/.config/plexus/plexus.conf"
     if [ -z "$audio_codec" ] || [ -z "$convert_dir" ] || [ -z "$converted_dir" ] || [ -z "$ffmpeg_threads" ] || [ -z "$ffmpeg_preset" ] || [ -z "$force_overwrite" ] || [ -z "$list_file" ] || [ -z "$media_container" ] || [ -z "$media_dir" ] || [ -z "$video_codec" ] || [ -z "$video_library" ]; then
-        printf "Your config file ($HOME/.config/plexus/plexus.conf) is missing required parameters.\\nMove or delete it and then run Plexus again.\\n"
+        printf "Your config file (${HOME}/.config/plexus/plexus.conf) is missing required parameters.\\nMove or delete it and then run Plexus again.\\n"
         exit 0
     fi
 else
-    mkdir -p "$HOME"/.config/plexus/
+    mkdir -p "${HOME}/.config/plexus/"
     curl -O https://raw.githubusercontent.com/Wolveix/Plexus/master/plexus.conf 2>/dev/null
-    mv plexus.conf "$HOME"/.config/plexus/
+    mv plexus.conf "${HOME}/.config/plexus/"
     printf "\\e[32mA config file could not be found. The default file has been downloaded.\\n"
+fi
+if [ ! -d "${HOME}/.plexus" ]; then
+    mkdir "${HOME}/.plexus"
 fi
 OS=$(uname)
 case "$OS" in
@@ -58,75 +61,41 @@ esac
 function set_config(){
     ovalue=$(echo $1 | sed 's_/_\\/_g')
     nvalue=$(echo $2 | sed 's_/_\\/_g')
-    sed -ie "s/$ovalue/$nvalue/g" "$HOME"/.config/plexus/plexus.conf
+    sed -ie "s/$ovalue/$nvalue/g" "${HOME}/.config/plexus/plexus.conf"
 }
 
-if [ -z "$ffmpeg_binary" ]; then
-    ffmpeg_binary=$(command -v ffmpeg)
-    set_config "ffmpeg_binary=\"\"" "ffmpeg_binary=\"$ffmpeg_binary\""
-else
-    if [ ! -f "$ffmpeg_binary" ]; then
-        ffmpeg_binary=""
-    fi
-fi
+declare -a dependencies=("ffmpeg" "ffprobe" "fusermount" "rclone" "rsync")
 
-if [ -z "$ffprobe_binary" ]; then
-    if [ ! $(command -v ffprobe) ]; then
-        ffprobe_binary=""
-    else
-        ffprobe_binary=$(command -v ffprobe)
-        set_config "ffprobe_binary=\"\"" "ffprobe_binary=\"$ffprobe_binary\""
-    fi
-else
-    if [ ! -f "$ffprobe_binary" ]; then
-        ffprobe_binary=""
-    fi
-fi
+for dependency in "${dependencies[@]}"; do
+    binary="${dependency}_binary"
+    value=${!binary}
 
-if [ -z "$fusermount_binary" ]; then
-    if [ ! $(command -v fusermount) ]; then
-        fusermount_binary=""
-    else
-        fusermount_binary=$(command -v fusermount)
-        set_config "fusermount_binary=\"\"" "fusermount_binary=\"$fusermount_binary\""
+    if [ -z "${!binary}" ]; then
+        value=$(command -v "$dependency")
+    elif  [ ! -f "${!binary}" ]; then
+        value=""
     fi
-else
-    if [ ! -f "$fusermount_binary" ]; then
-        fusermount_binary=""
-    fi
-fi
 
-if [ -z "$rclone_binary" ]; then
-    if [ ! $(command -v rclone) ]; then
-        rclone_binary=""
-    else
-        rclone_binary=$(command -v rclone)
-        set_config "rclone_binary=\"\"" "rclone_binary=\"$rclone_binary\""
-    fi
-else
-    if [ ! -f "$rclone_binary" ]; then
-        rclone_binary=""
-    fi
-fi
+    case $dependency in
+        'ffmpeg')
+            ffmpeg_binary="$value"
+            ;;
+        'ffprobe')
+            ffprobe_binary="$value"
+            ;;
+        'fusermount')
+            fusermount_binary="$value"
+            ;;
+        'rclone')
+            rclone_binary="$value"
+            ;;
+        'rsync')
+            rsync_binary="$value"
+            ;;
+    esac
 
-if [ -z "$rsync_binary" ]; then
-    if [ ! $(command -v rsync) ]; then
-        rsync_binary=""
-    else
-        rsync_binary=$(command -v rsync)
-        set_config "rsync_binary=\"\"" "rsync_binary=\"$rsync_binary\""
-    fi
-else
-    if [ ! -f "$rsync_binary" ]; then
-        rsync_binary=""
-    fi
-fi
-
-function main () {
-    function .log () {
-        shift
-    }
-}
+    set_config "$binary=\"\"" "$binary=\"$value\""
+done
 
 function check_variable {
     case $1 in
@@ -370,7 +339,7 @@ function func_config {
                             exit 0
                             ;;
                         "Exit")
-                            printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                            printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                             exit 0
                             ;;
                     esac
@@ -408,7 +377,7 @@ function func_config {
                             exit 0
                             ;;
                         "Exit")
-                            printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                            printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                             exit 0
                             ;;
                     esac
@@ -448,7 +417,7 @@ function func_config {
                             exit 0
                             ;;
                         "Exit")
-                            printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                            printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                             exit 0
                             ;;
                     esac
@@ -516,7 +485,7 @@ function func_config {
                                         exit 0
                                         ;;
                                     "Exit")
-                                        printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                                        printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                                         exit 0
                                         ;;
                                 esac
@@ -531,14 +500,14 @@ function func_config {
                             exit 0
                             ;;
                         "Exit")
-                            printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                            printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                             exit 0
                             ;;
                     esac
                 done
                 ;;
             "Exit")
-                printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                 exit 0
                 ;;
         esac
@@ -546,6 +515,14 @@ function func_config {
 }
 
 function func_encode {
+    if [ ! -f "$ffmpeg_binary" ]; then
+        printf "\\e[31mFFmpeg must be installed to use this command.\\n\\e[0m"
+        exit 0
+    elif [ ! -f "$ffprobe_binary" ]; then
+        printf "\\e[31mFFprobe (part of FFmpeg) must be installed to use this command.\\n\\e[0m"
+        exit 0
+    fi
+
     if [ ! -e "$list_file" ]; then
         printf "List file does not exist.\\nPlease manually specify a list file or run the list command to create one.\\n"
         exit 0
@@ -821,17 +798,17 @@ function func_install {
                             printf "\\n\\e[36mInstalling FFmpeg (custom).\\nThis will take a few minutes as it's built from source with support for extended codecs\\n\\n\\e[0m"
                             if [ "$distro" == '"CentOS Linux"' ] || [ "$distro" == 'Fedora' ]; then
                                 $packages install build-essential bzip2 curl gcc-c++ make perl which
-                                mkdir -p "$HOME/ffmpeg-build/packages/"
+                                mkdir -p "${HOME}/ffmpeg-build/packages/"
                                 curl -O ftp://ftp.videolan.org/pub/x264/snapshots/last_x264.tar.bz2
-                                tar xvjf last_x264.tar.bz2 -C "$HOME/ffmpeg-build/packages/"
+                                tar xvjf last_x264.tar.bz2 -C "${HOME}/ffmpeg-build/packages/"
                             else
                                 $packages install build-essential curl g++ make perl
                             fi
                             curl https://raw.githubusercontent.com/markus-perl/ffmpeg-build-script/master/web-install.sh?v1 2>/dev/null | sudo bash
                             printf "\\n\\nMoving FFmpeg into /usr/bin.\\n"
-                            sudo /bin/mv -f "$HOME/ffmpeg-build/workspace/bin/ffmpeg" "/usr/bin"
+                            sudo /bin/mv -f "${HOME}/ffmpeg-build/workspace/bin/ffmpeg" "/usr/bin"
                             printf "\\nRemoving FFmpeg build files.\\n"
-                            sudo /bin/rm -r "$HOME/ffmpeg-build"
+                            sudo /bin/rm -r "${HOME}/ffmpeg-build"
                             printf "\\n\\e[32mFFmpeg (custom) has been installed!\\e[0m\\n"
                             exit 0
                             ;;
@@ -848,14 +825,14 @@ function func_install {
                             exit 0
                             ;;
                         "Exit")
-                            printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                            printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                             exit 0
                             ;;
                     esac
                 done
                 ;;
             "Update Plexus")
-                config_file="$HOME/.config/plexus/plexus.conf.bak"
+                config_file="${HOME}/.config/plexus/plexus.conf.bak"
                 if [ -f "$config_file" ]; then
                     i=1
                     while [ -f "$config_file.$i" ]; do
@@ -864,13 +841,13 @@ function func_install {
                     config_file="$config_file.$i"
                 fi
 
-                /bin/mv "$HOME/.config/plexus/plexus.conf" "$config_file"
+                /bin/mv "${HOME}/.config/plexus/plexus.conf" "$config_file"
                 printf "\\n\\nYour current config file has been backed up ($config_file).\\n"
                 curl https://plexus.robt.me/install.sh 2>/dev/null | sudo bash
                 exit 0
                 ;;
             "Exit")
-                printf "\\nYou can find the config file here: $HOME/.config/plexus/plexus.conf\\n"
+                printf "\\nYou can find the config file here: ${HOME}/.config/plexus/plexus.conf\\n"
                 exit 0
                 ;;
         esac
@@ -878,6 +855,11 @@ function func_install {
 }
 
 function func_list {
+    if [ ! -f "$ffprobe_binary" ]; then
+        printf "\\e[31mFFprobe (part of FFmpeg) must be installed to use this command.\\n\\e[0m"
+        exit 0
+    fi
+
     printf "\\n\\e[32mAudio codec: $audio_codec\\nList file: $list_file\\nMedia container: $media_container\\nMedia directory: $media_dir\\nMount Path: $mount_dir\\nVideo codec: $video_codec\\n\\n\\e[0m"
 
     if [ ! -d "$media_dir" ]; then
@@ -900,6 +882,12 @@ function func_list {
                     ;;
             esac
         done
+    else
+        touch "$list_file"
+    fi
+
+    if [ ! -f "$blacklist_file" ]; then
+        touch "$blacklist_file"
     fi
 
     printf "\\e[32mScanning directory...\\n"
@@ -920,8 +908,8 @@ function func_list {
                         line=${line#"$mount_dir"}
                         echo "$line" >> "$list_file"
                     else
-                        file_audio_codec=`$ffprobe_binary -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$line"`
-                        file_video_codec=`$ffprobe_binary -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "$line"`
+                        file_audio_codec=$($ffprobe_binary -v error -select_streams a:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${line}")
+                        file_video_codec=$($ffprobe_binary -v error -select_streams v:0 -show_entries stream=codec_name -of default=noprint_wrappers=1:nokey=1 "${line}")
 
                         if [ -n "$file_audio_codec" ] || [ -n "$file_video_codec" ]; then
                             if [ "$file_audio_codec" != "$audio_codec" ] || [ "$file_video_codec" != "$video_codec" ]; then
@@ -945,7 +933,7 @@ function func_list {
 
 function func_mount {
     printf "\\e[36mMounting Rclone remote to $media_dir\\n\\e[0m"
-    if ! $rclone_binary mount "$rclone_remote" "$media_dir" --allow-other --buffer-size 256M --dir-cache-time 72h --drive-chunk-size 32M --log-level INFO --log-file "$HOME"/.plexus/logs/rclone.log --timeout 1h --umask 002 --vfs-read-chunk-size 128M --vfs-read-chunk-size-limit off &
+    if ! $rclone_binary mount "$rclone_remote" "$media_dir" --allow-other --buffer-size 256M --dir-cache-time 72h --drive-chunk-size 32M --log-level INFO --log-file "${HOME}"/.plexus/logs/rclone.log --timeout 1h --umask 002 --vfs-read-chunk-size 128M --vfs-read-chunk-size-limit off &
     then
         printf "\\nAn uknown error occurred (does the remote exist?)\\n\\e[0m"
     else
@@ -1044,8 +1032,8 @@ case "$command" in
                     fi
                     ;;
                 r)
-                    $rclone_binary listremotes > $HOME/.plexus/rclone/remotes.txt
-                    if [ ! -z "$(grep "$OPTARG" "$HOME/.plexus/rclone/remotes.txt")" ]; then
+                    $rclone_binary listremotes > ${HOME}/.plexus/rclone/remotes.txt
+                    if [ ! -z "$(grep "$OPTARG" "${HOME}/.plexus/rclone/remotes.txt")" ]; then
                         if [ "${OPTARG: -1}" == ":" ]; then
                             rclone_remote="$OPTARG"
                         else
@@ -1320,5 +1308,3 @@ case "$command" in
         ;;
 esac
 ### COMMAND HANDLER ###
-
-main "$@"
